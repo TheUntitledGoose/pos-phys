@@ -1834,7 +1834,7 @@ displayProblem = function(problem){
 	var baseURL = nameSpace.baseURL;
    
 	answerIds = [];
-	answerValues = [];
+	// answerValues = [];
     
 	nameSpace.problem = problem;
 	nameSpace.problemID = problem.problem_id;
@@ -1995,7 +1995,7 @@ displayProblem = function(problem){
 // if the assessment is open and not finalized, block them from seeing completed answers
 displayProblemNotAllowed = function(){
     answerIds = [];
-    answerValues = [];
+    // answerValues = [];
 
     $("#problemHTML").empty();
     $("#problemHTML").html("<br><br>This question cannot be viewed at this time because the assignment is locked.  Please contact your teacher.<br><br><br><br>");
