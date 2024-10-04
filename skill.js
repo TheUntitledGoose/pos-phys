@@ -2135,10 +2135,8 @@ createProblemDataObject = function(problem){
         // anyhow, just make div with answers here.   l m a o
         var answerDiv = $("<div id='answerDisplayDiv'></div>");
         answerDiv.empty()
-        if (!answerDiv.length) {
-            $("body").append(answerDiv);
-            answerDiv.append("<h3>Answers</h3>");
-        }
+        $("body").append(answerDiv);
+        answerDiv.append("<h3>Answers</h3>");
 
         for (var i = 0; i < answerValues.length; i++) {
             answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
