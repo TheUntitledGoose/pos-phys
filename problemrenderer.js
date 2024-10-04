@@ -1386,8 +1386,8 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
         
         // we won't have to dig around if we literally reroute the js file
         // sorry bros
-        console.log($(this).data("answer"));
         console.log(answerValues)
+        console.log($(this).data("answer"));
     });
 
 

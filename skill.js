@@ -1898,7 +1898,7 @@ displayProblem = function(problem){
 	}
     
     // Remove a prior script because we will re-add a new one during createProblemStructure below.
-    $("#problemscript").remove();
+    //$("#problemscript").remove();
     
     //fix chemistry problems
     if($("#diagramDiv").children().length === 0){
@@ -2002,7 +2002,7 @@ displayProblemNotAllowed = function(){
 
     $("#footerContainer").hide();
 
-    $("#problemscript").remove();
+    // $("#problemscript").remove();
 
     //fix chemistry problems
     if($("#diagramDiv").children().length === 0){
@@ -2125,6 +2125,42 @@ createProblemDataObject = function(problem){
         var inlineScript = document.createTextNode(formattedJS);
         newScript.appendChild(inlineScript); 
         target.appendChild(newScript);
+
+        // so apperantly, all my script injection was quite useless.
+        // the devs just have put all the answer values here on question load.
+        // this makes my job soooooo much easier
+        // 12 hours of injection wasted...
+        // hey, at least I learned a bit more
+
+        // anyhow, just make div with answers here.   l m a o
+        var answerDiv = $("<div id='answerDisplayDiv'></div>");
+        answerDiv.empty()
+        if (!answerDiv.length) {
+            $("body").append(answerDiv);
+            answerDiv.append("<h3>Answers</h3>");
+        }
+
+        for (var i = 0; i < answerValues.length; i++) {
+            answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
+        }
+
+        // Style the div to be centered at the top of the page
+        answerDiv.css({
+            "position": "fixed",
+            "top": "10%",
+            "left": "50%",
+            "transform": "translate(-50%, -10%)",
+            "background-color": "#fff",
+            "border": "2px solid black",
+            "padding": "20px",
+            "z-index": "10000",
+            "box-shadow": "0px 0px 10px rgba(0,0,0,0.5)",
+            "font-family": "Arial, sans-serif",
+            "font-size": "16px",
+            "text-align": "center",
+            "max-width": "300px"
+        });
+
     }
     
     var answerMap = {};
@@ -2770,8 +2806,8 @@ updateUserProblemDataForSkill = function(problemArray){
                 data: JSON.stringify(dataObject)
             }) );
 	    }
-	    $("#printProblemHTML").empty();
-        $("#problemscript").remove();
+	    //$("#printProblemHTML").empty();
+        //$("#problemscript").remove();
 	}
 		
 	$.when.apply($, promises).then(function() {
