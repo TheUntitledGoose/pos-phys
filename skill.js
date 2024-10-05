@@ -2095,7 +2095,7 @@ generateProblemData = function(problem){
         // First time problem has been visited, so now we have to go through and generate all the randoms
         var dataObject = createProblemDataObject(problem);
         
-        //storeProblemGeneratedData(dataObject);
+        storeProblemGeneratedData(dataObject);
     } 
     else if (problem.newStyleProblem) {
         // Do nothing
