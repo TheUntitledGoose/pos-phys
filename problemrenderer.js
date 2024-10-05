@@ -393,6 +393,7 @@ function getDynDropDownStatements(destination) {
 }
 
 function renderContainer(destination, custom_math, only_randoms, custom_rounding, dyndropdown_statements, vars, answerValues, sim) {
+    console.log(destination)
     // Default is a dummy which is really only used for simulation rerendering
     answerValues = answerValues || [];
 
