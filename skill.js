@@ -963,15 +963,15 @@ getProblemData = function(problemID, skillID){
 	var problemData = nameSpace.problemMap[problemID];
 	var problemExclusion = problemData.problem_exclusion;
 	var userRole = $("#userRole").val();
-	// if((problemExclusion) && (userRole === "student")){
-	// 	$("#problemHTML").empty();
-	// 	var html = '<div class="mt-5 mb-5" style="text-align: center;font-size: 30px;"><span>This problem has been removed by your teacher and will not affect your score.</span></div>';
-	//     $("#problemHTML").html(html);
+	if((problemExclusion) && (userRole === "student")){
+		$("#problemHTML").empty();
+		var html = '<div class="mt-5 mb-5" style="text-align: center;font-size: 30px;"><span>This problem has been removed by your teacher and will not affect your score.</span></div>';
+	    $("#problemHTML").html(html);
 	    
-	//     removedProblemUpdate(problemID);
-	//     updateHistoryState(problemID);
-	// 	return;
-	// }
+	    removedProblemUpdate(problemID);
+	    updateHistoryState(problemID);
+		return;
+	}
 		
 	nameSpace.skillID = skillID;
 	
@@ -1091,9 +1091,9 @@ getCustomCourseReferenceDataByName = function(problemName){
         }
 
         var userRole = $("#userRole").val();
-        // if (userRole === "admin" || userRole === "teacher") {
+        if (userRole === "admin" || userRole === "teacher") {
             $("#teacherReferenceTip").css("display", "block");
-        // }
+        }
 
         if ($("a[data-reference]")[0]) {
             $("a[data-reference]")[0].click();
@@ -1833,7 +1833,7 @@ displayProblem = function(problem){
 	
 	var baseURL = nameSpace.baseURL;
    
-	// answerIds = [];
+	answerIds = [];
 	// answerValues = [];
     
 	nameSpace.problem = problem;
@@ -1887,10 +1887,10 @@ displayProblem = function(problem){
     
 	//code for disabling text
 	var userRole = $("#userRole").val();
-	// if (userRole !== "admin") {
-	// 	$("#problemDiv").addClass("disabledText");
-    //     $("#createProblemContainer").addClass("disabledText");
-	// }
+	if (userRole !== "admin") {
+		$("#problemDiv").addClass("disabledText");
+        $("#createProblemContainer").addClass("disabledText");
+	}
     
     //add media if applicable
     if(problem.media_id){
@@ -1994,7 +1994,7 @@ displayProblem = function(problem){
 
 // if the assessment is open and not finalized, block them from seeing completed answers
 displayProblemNotAllowed = function(){
-    // answerIds = [];
+    answerIds = [];
     // answerValues = [];
 
     $("#problemHTML").empty();
@@ -2087,15 +2087,13 @@ createProblemStructure = function(problem){
 generateProblemData = function(problem){
 	
     var sendOrResendNewStyleProblemData = checkIfAnswerValuesCorrectlyStored(problem);
-
-    // var sendOrResendNewStyleProblemData = true;
     
     // Check if this is the first time we've visited the problem
     if(problem.javascript || sendOrResendNewStyleProblemData){
         // First time problem has been visited, so now we have to go through and generate all the randoms
         var dataObject = createProblemDataObject(problem);
         
-        //storeProblemGeneratedData(dataObject);
+        storeProblemGeneratedData(dataObject);
     } 
     else if (problem.newStyleProblem) {
         // Do nothing
@@ -2117,30 +2115,6 @@ generateProblemData = function(problem){
 
 createProblemDataObject = function(problem){
     //if the problem is old style and has not been visited before, the javascript is included and processed
-    var answerDiv;
-    if (!$("#answerDisplayDiv").length) {
-        answerDiv = $("<div id='answerDisplayDiv'></div>");
-    } else {
-        answerDiv = $("#answerDisplayDiv");
-    }
-    answerDiv.empty()
-    // Style the div to be centered at the top of the page
-    answerDiv.css({
-        "position": "fixed",
-        "top": "10%",
-        "left": "50%",
-        "transform": "translate(-50%, -10%)",
-        "background-color": "#fff",
-        "border": "2px solid black",
-        "padding": "20px",
-        "z-index": "10000",
-        "box-shadow": "0px 0px 10px rgba(0,0,0,0.5)",
-        "font-family": "Arial, sans-serif",
-        "font-size": "16px",
-        "text-align": "center",
-        "max-width": "300px"
-    });
-    $("body").append(answerDiv);
     if(problem.javascript) {
         // This code only applies to old style problems with stored html and stored javascript
         var formattedJS = problem.javascript;
@@ -2159,14 +2133,32 @@ createProblemDataObject = function(problem){
         // hey, at least I learned a bit more
 
         // anyhow, just make div with answers here.   l m a o
+        var answerDiv = $("<div id='answerDisplayDiv'></div>");
+        answerDiv.empty()
+        $("body").append(answerDiv);
         answerDiv.append("<h3>Answers</h3>");
 
         for (var i = 0; i < answerValues.length; i++) {
             answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
         }
 
-    } else {
-        answerDiv.append("<h3>Unknown answers. Restart problems</h3>");
+        // Style the div to be centered at the top of the page
+        answerDiv.css({
+            "position": "fixed",
+            "top": "10%",
+            "left": "50%",
+            "transform": "translate(-50%, -10%)",
+            "background-color": "#fff",
+            "border": "2px solid black",
+            "padding": "20px",
+            "z-index": "10000",
+            "box-shadow": "0px 0px 10px rgba(0,0,0,0.5)",
+            "font-family": "Arial, sans-serif",
+            "font-size": "16px",
+            "text-align": "center",
+            "max-width": "300px"
+        });
+
     }
     
     var answerMap = {};
@@ -2213,8 +2205,7 @@ createProblemDataObject = function(problem){
         randoms: jsonRandomString,
         only_randoms: Object.fromEntries(onlyRandoms)
     };
-        
-    console.log(dataObject)
+            
     return dataObject;
 };
 
