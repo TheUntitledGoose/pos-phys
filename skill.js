@@ -1833,7 +1833,7 @@ displayProblem = function(problem){
 	
 	var baseURL = nameSpace.baseURL;
    
-	// answerIds = [];
+	answerIds = [];
 	// answerValues = [];
     
 	nameSpace.problem = problem;
@@ -1994,7 +1994,7 @@ displayProblem = function(problem){
 
 // if the assessment is open and not finalized, block them from seeing completed answers
 displayProblemNotAllowed = function(){
-    // answerIds = [];
+    answerIds = [];
     // answerValues = [];
 
     $("#problemHTML").empty();
