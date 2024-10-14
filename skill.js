@@ -963,15 +963,15 @@ getProblemData = function(problemID, skillID){
 	var problemData = nameSpace.problemMap[problemID];
 	var problemExclusion = problemData.problem_exclusion;
 	var userRole = $("#userRole").val();
-	// if((problemExclusion) && (userRole === "student")){
-	// 	$("#problemHTML").empty();
-	// 	var html = '<div class="mt-5 mb-5" style="text-align: center;font-size: 30px;"><span>This problem has been removed by your teacher and will not affect your score.</span></div>';
-	//     $("#problemHTML").html(html);
+	if((problemExclusion) && (userRole === "student")){
+		$("#problemHTML").empty();
+		var html = '<div class="mt-5 mb-5" style="text-align: center;font-size: 30px;"><span>This problem has been removed by your teacher and will not affect your score.</span></div>';
+	    $("#problemHTML").html(html);
 	    
-	//     removedProblemUpdate(problemID);
-	//     updateHistoryState(problemID);
-	// 	return;
-	// }
+	    removedProblemUpdate(problemID);
+	    updateHistoryState(problemID);
+		return;
+	}
 		
 	nameSpace.skillID = skillID;
 	
@@ -1091,9 +1091,9 @@ getCustomCourseReferenceDataByName = function(problemName){
         }
 
         var userRole = $("#userRole").val();
-        // if (userRole === "admin" || userRole === "teacher") {
+        if (userRole === "admin" || userRole === "teacher") {
             $("#teacherReferenceTip").css("display", "block");
-        // }
+        }
 
         if ($("a[data-reference]")[0]) {
             $("a[data-reference]")[0].click();
@@ -1834,7 +1834,7 @@ displayProblem = function(problem){
 	var baseURL = nameSpace.baseURL;
    
 	answerIds = [];
-	// answerValues = [];
+	answerValues = [];
     
 	nameSpace.problem = problem;
 	nameSpace.problemID = problem.problem_id;
@@ -1887,10 +1887,10 @@ displayProblem = function(problem){
     
 	//code for disabling text
 	var userRole = $("#userRole").val();
-	// if (userRole !== "admin") {
-	// 	$("#problemDiv").addClass("disabledText");
-    //     $("#createProblemContainer").addClass("disabledText");
-	// }
+	if (userRole !== "admin") {
+		$("#problemDiv").addClass("disabledText");
+        $("#createProblemContainer").addClass("disabledText");
+	}
     
     //add media if applicable
     if(problem.media_id){
@@ -2087,8 +2087,6 @@ createProblemStructure = function(problem){
 generateProblemData = function(problem){
 	
     var sendOrResendNewStyleProblemData = checkIfAnswerValuesCorrectlyStored(problem);
-
-    // var sendOrResendNewStyleProblemData = true;
     
     // Check if this is the first time we've visited the problem
     if(problem.javascript || sendOrResendNewStyleProblemData){
@@ -2226,6 +2224,7 @@ storeProblemGeneratedData = function(dataObject){
         data: JSON.stringify(dataObject)
     })
     .done(function() {
+        console.log(answerValues)
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
         if(jqXHR.status === 401){
@@ -2813,6 +2812,7 @@ updateUserProblemDataForSkill = function(problemArray){
                 data: JSON.stringify(dataObject)
             }) );
 	    }
+        console.log(answerValues)
 	    //$("#printProblemHTML").empty();
         //$("#problemscript").remove();
 	}
