@@ -191,7 +191,9 @@ problemRender = function (html, custom_math, destination, only_randoms, custom_r
 
     // TODO: answerValues should eventually not be a global that makes it easy for students to grab the correct answers
     // Thankfully it does get zapped right after upload to the server
-    // answerValues = [];
+    console.log(answerValues)
+    answerValues = [];
+    console.log(answerValues)
     let sim = new SimObject();
 
     // This will be passed in empty if new or populated from db with only_randoms if previously visited
@@ -253,7 +255,10 @@ problemRender = function (html, custom_math, destination, only_randoms, custom_r
                         $(this).css($(this1).data("styles"));
                     }
                     // If differences remain, update the whole thing
-                    if (this.outerHTML != this1.outerHTML) {
+                    if ($(this1).is("img") && $(this).attr("src") != $(this1).attr("src")) {
+                        $(this).attr("src", $(this1).attr("src"));
+                    } else if (this.outerHTML != this1.outerHTML) {
+                        // If differences remain, update the whole thing
                         $(this).replaceWith(this1);
                     }
                 }
@@ -395,6 +400,7 @@ function getDynDropDownStatements(destination) {
 function renderContainer(destination, custom_math, only_randoms, custom_rounding, dyndropdown_statements, vars, answerValues, sim) {
     console.log(destination)
     // Default is a dummy which is really only used for simulation rerendering
+    console.log(answerValues)
     answerValues = answerValues || [];
 
     // ID incrementer
@@ -1382,6 +1388,7 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
     // That having been said since we check for accuracy of the stored answers each time using a hash to check that the
     // latest calculated answers are the same as what's on the server, it probably doesn't matter.
     $("[name=answer]", destination).each(function (index) {
+        console.log(this)
         answerValues.push($(this).data("answer"));
         // Now zero it out so students don't dig for it in the JS developer console
         
