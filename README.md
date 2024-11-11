@@ -8,7 +8,7 @@ I have no connection to the guy, just thought it was interesting no one made a p
 # Usage
 Extension: Tampermonkey.
 
-Paste the script in a new script tab and go to a <u>***new problem***</u>.
+Paste the **script.js** in a new script tab and go to a <u>***new problem***</u>.
 
 # TROUBLESHOOTING
 Because the creators are smart, they have security 🤯🤯🤯🤯🤯🤯🤯
