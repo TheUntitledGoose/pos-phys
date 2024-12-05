@@ -2163,6 +2163,15 @@ createProblemDataObject = function(problem){
             answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
         }
 
+        // for all answers that are a number, set the value of answer boxes to answervalue
+        for (var i = 0; i < answerValues.length; i++) {
+            const answerBoxes = document.querySelectorAll("[name=answer]")
+            const isNegative = answerBoxes[i].classList.contains("allownegative")
+
+            // no clue if this works
+            if (isNegative) answerBoxes[i].value = answerValues[i]
+        }
+
     } else {
         answerDiv.append("<h3>Unknown answers. Restart problems</h3>");
     }
