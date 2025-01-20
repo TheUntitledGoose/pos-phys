@@ -22,7 +22,7 @@ function blockAndReplaceScript() {
             // Inject a modified version of the script
             if (script.src.includes('skill/skill.js')) {
                 if (dev) script.src = "http://127.0.0.1:5500/skill.js";
-                if (!dev) script.src = "https://cdn.jsdelivr.net/gh/TheUntitledGoose/pos-phys@refs/heads/last-working/skill.js";
+                if (!dev) script.src = "https://cdn.jsdelivr.net/gh/TheUntitledGoose/pos-phys@main/skill.js";
             } else {
                 if (dev) script.src = "http://127.0.0.1:5500/problemrenderer.js";
                 if (!dev) script.src = "https://cdn.jsdelivr.net/gh/TheUntitledGoose/pos-phys@refs/heads/main/problemrenderer.js";
