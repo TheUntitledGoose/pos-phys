@@ -2091,12 +2091,12 @@ generateProblemData = function(problem){
     var sendOrResendNewStyleProblemData = checkIfAnswerValuesCorrectlyStored(problem);
     
     // Check if this is the first time we've visited the problem
-    // if(problem.javascript || sendOrResendNewStyleProblemData){
-    if(true){
+    if(problem.javascript || sendOrResendNewStyleProblemData){
+    // if(true){
         // First time problem has been visited, so now we have to go through and generate all the randoms
         var dataObject = createProblemDataObject(problem);
         
-        // storeProblemGeneratedData(dataObject);
+        storeProblemGeneratedData(dataObject);
     } 
     else if (problem.newStyleProblem) {
         // Do nothing
@@ -2116,13 +2116,14 @@ generateProblemData = function(problem){
     }
 };
 
+let imgui;
+let drawInt;
 createProblemDataObject = function(problem){
     //if the problem is old style and has not been visited before, the javascript is included and processed
     
     // quick creation setup with myCanvas
     // first check if canvas exists, if not create it, else skip this
-    let imgui;
-    if (!document.getElementById("canvas")) {
+    if (!document.getElementById("myCanvas")) {
         const c = document.createElement("canvas");
         c.id = "myCanvas";
         c.style = "position: absolute; top: 0px; left: 0px; z-index: 1000;";
@@ -2143,7 +2144,7 @@ createProblemDataObject = function(problem){
             imgui.draw();
             // window.requestAnimationFrame(animate);
         }
-        setInterval(animate, 10);
+        drawInt = setInterval(animate, 10);
         // window.requestAnimationFrame(animate);
 
         document.addEventListener('mousemove', (e) => {
@@ -2155,6 +2156,7 @@ createProblemDataObject = function(problem){
         })
     } else {
         // canvas exists, clear all elements and reset
+        // clearInterval(drawInt)
         imgui.elements = [];
         imgui.staticText("Answers:")
     }

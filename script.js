@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  try to take over the world!
 // @author       You
-// @match        https://*.positivephysics.org/*
+// @match        https://*.positivephysics.org/lesson/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @require      https://code.jquery.com/jquery-2.1.4.min.js
 // @run-at       document-start
@@ -83,4 +83,4 @@ function checkForUpdates(currentVersion) {
 }
 
 // Initial update check when the script runs
-checkForUpdates("2.0.0");
+checkForUpdates("2.0.1");
