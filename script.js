@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Pos Phys Answ - test
+// @name         Physics Engine for Navigating Intelligent Systems
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  try to take over the world!
@@ -11,7 +11,7 @@
 // ==/UserScript==
 
 var $ = window.jQuery;
-const dev = false;
+const dev = true;
 if (dev) console.log("dev")
 function blockAndReplaceScript() {
     const scripts = document.querySelectorAll('script');
@@ -42,4 +42,45 @@ const observer = new MutationObserver(function(mutations) {
     });
 });
 
+// add my own script
+const newScript = document.createElement('script');
+newScript.type = "module"
+newScript.src = "https://cdn.jsdelivr.net/gh/TheUntitledGoose/imgui-js@main/imgui.js";
+document.head.appendChild(newScript);
+
 observer.observe(document, { childList: true, subtree: true });
+
+// Update Checker
+function checkForUpdates(currentVersion) {
+    const repoUrl = "https://raw.githubusercontent.com/TheUntitledGoose/pos-phys/refs/heads/main/version.json";
+    
+    try {
+        fetch(repoUrl)
+            .then(response => response.json())
+            .then(data => {
+                const latestVersion = data.version;
+                const downloadUrl = "https://github.com/TheUntitledGoose/pos-phys/blob/main/script.js";
+
+                if (latestVersion !== currentVersion) {
+                    console.log(`Your version: ${currentVersion}. Version: ${latestVersion} is available.\nDownload from: ${downloadUrl}`);
+                    
+                    // You can add code here to prompt the user to download the update
+                    alert(`Version: ${latestVersion}, is available! Current: ${currentVersion}. Please download it from:\n${downloadUrl}`);
+                    // Open the download URL in a new tab or window
+                    window.open(downloadUrl, '_blank');
+                } else {
+                    console.log(`You are using the latest version: ${currentVersion}.`);
+                }
+            })
+            .catch(error => {
+                console.error("Error checking for updates:", error);
+                alert(`An error occurred while checking for updates. Please try again later.`);
+            });
+    } catch (error) {
+        console.error("Error checking for updates:", error);
+        alert(`An error occurred while checking for updates. Please try again later.`);
+    }
+}
+
+// Initial update check when the script runs
+checkForUpdates("2.0.0");

@@ -178,13 +178,15 @@ $(document).ready(function() {
             };
 
             if(skillType === "extrapractice"){
-                dataObject.extraPracticeFinalizedInd = 1;
+				dataObject.extraPracticeFinalizedInd = 1;   
+                updateExtraPracticeSkillStatusByUser(dataObject);
             }
             else if(skillType === "assessment"){
-                dataObject.assessmentFinalizedInd = 1;
+				dataObject.assessmentFinalizedInd = 1;
+                updateAssessmentStatusByUser(dataObject);
             }
     
-            updateSkillStatusByUser(dataObject);
+            // updateSkillStatusByUser(dataObject);
         }
     });
     
@@ -2089,11 +2091,12 @@ generateProblemData = function(problem){
     var sendOrResendNewStyleProblemData = checkIfAnswerValuesCorrectlyStored(problem);
     
     // Check if this is the first time we've visited the problem
-    if(problem.javascript || sendOrResendNewStyleProblemData){
+    // if(problem.javascript || sendOrResendNewStyleProblemData){
+    if(true){
         // First time problem has been visited, so now we have to go through and generate all the randoms
         var dataObject = createProblemDataObject(problem);
         
-        storeProblemGeneratedData(dataObject);
+        // storeProblemGeneratedData(dataObject);
     } 
     else if (problem.newStyleProblem) {
         // Do nothing
@@ -2115,30 +2118,75 @@ generateProblemData = function(problem){
 
 createProblemDataObject = function(problem){
     //if the problem is old style and has not been visited before, the javascript is included and processed
-    var answerDiv;
-    if (!$("#answerDisplayDiv").length) {
-        answerDiv = $("<div id='answerDisplayDiv'></div>");
+    
+    // quick creation setup with myCanvas
+    // first check if canvas exists, if not create it, else skip this
+    let imgui;
+    if (!document.getElementById("canvas")) {
+        const c = document.createElement("canvas");
+        c.id = "myCanvas";
+        c.style = "position: absolute; top: 0px; left: 0px; z-index: 1000;";
+        document.body.appendChild(c);
+        
+        // initiate my imgui
+        // const c = document.getElementById("myCanvas");
+        const ctx = c.getContext("2d");
+
+        imgui = new window.ImGui(200, 250, 800, 100, c);
+        c.width = window.outerWidth;
+        c.height = window.outerHeight;
+        imgui.staticText("Answers:")
+        // imgui.init();
+
+        function animate() {
+            ctx.clearRect(0, 0, c.width, c.height);
+            imgui.draw();
+            // window.requestAnimationFrame(animate);
+        }
+        setInterval(animate, 10);
+        // window.requestAnimationFrame(animate);
+
+        document.addEventListener('mousemove', (e) => {
+            if (imgui.checkHover(e.x, e.y)) {
+                c.style.pointerEvents = 'auto'; // Enable interaction with the canvas
+            } else {
+                c.style.pointerEvents = 'none'; // Let mouse events pass through to HTML elements
+            }
+        })
     } else {
-        answerDiv = $("#answerDisplayDiv");
+        // canvas exists, clear all elements and reset
+        imgui.elements = [];
+        imgui.staticText("Answers:")
     }
-    answerDiv.empty()
-    // Style the div to be centered at the top of the page
-    answerDiv.css({
-        "position": "fixed",
-        "top": "10%",
-        "left": "50%",
-        "transform": "translate(-50%, -10%)",
-        "background-color": "#fff",
-        "border": "2px solid black",
-        "padding": "20px",
-        "z-index": "10000",
-        "box-shadow": "0px 0px 10px rgba(0,0,0,0.5)",
-        "font-family": "Arial, sans-serif",
-        "font-size": "16px",
-        "text-align": "center",
-        "max-width": "300px"
-    });
-    $("body").append(answerDiv);
+
+    // ** NO LONGER USED **
+
+    // var answerDiv;
+    // if (!$("#answerDisplayDiv").length) {
+    //     answerDiv = $("<div id='answerDisplayDiv'></div>");
+    // } else {
+    //     answerDiv = $("#answerDisplayDiv");
+    // }
+    // answerDiv.empty()
+    // // Style the div to be centered at the top of the page
+    // answerDiv.css({
+    //     "position": "fixed",
+    //     "top": "10%",
+    //     "left": "50%",
+    //     "transform": "translate(-50%, -10%)",
+    //     "background-color": "#fff",
+    //     "border": "2px solid black",
+    //     "padding": "20px",
+    //     "z-index": "10000",
+    //     "box-shadow": "0px 0px 10px rgba(0,0,0,0.5)",
+    //     "font-family": "Arial, sans-serif",
+    //     "font-size": "16px",
+    //     "text-align": "center",
+    //     "max-width": "300px"
+    // });
+    // $("body").append(answerDiv);
+
+
     if(problem.javascript) {
         // This code only applies to old style problems with stored html and stored javascript
         var formattedJS = problem.javascript;
@@ -2156,12 +2204,28 @@ createProblemDataObject = function(problem){
         // 12 hours of injection wasted...
         // hey, at least I learned a bit more
 
-        // anyhow, just make div with answers here.   l m a o
-        answerDiv.append("<h3>Answers</h3>");
-
+        // Add ImGui staticText for each question
+        let skipped = 0;
         for (var i = 0; i < answerValues.length; i++) {
-            answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
+            // Simple logic to detect if current answer is unit via '/'
+            // if so, edit the previous line to include unit
+            // TODO
+            if (answerValues[i].toString().includes('/')) {
+                console.log(imgui.elements)
+                imgui.elements[i-skipped].text += " " + answerValues[i];
+                skipped++;
+            } else {
+                imgui.staticText("Answer " + (i + 1) + ": " + answerValues[i])
+            }
+            // imgui.staticText("Answer " + (i + 1) + ": " + answerValues[i])
+
         }
+        imgui.init();
+        imgui.width = 300;
+        
+        // for (var i = 0; i < answerValues.length; i++) {
+        //     answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
+        // }
 
         // for all answers that are a number, set the value of answer boxes to answervalue
         for (var i = 0; i < answerValues.length; i++) {
@@ -2173,7 +2237,7 @@ createProblemDataObject = function(problem){
         }
 
     } else {
-        answerDiv.append("<h3>Unknown answers. Restart problems</h3>");
+        // answerDiv.append("<h3>Unknown answers. Restart problems</h3>");
     }
     
     var answerMap = {};
@@ -2336,6 +2400,60 @@ restartProblems = function(){
             default:
                 alertAndThrowError("Error has occurred",jqXHR.status,errorThrown,this.url);
                 break;
+        }
+    })
+    .always(function() {
+        //nothing
+    });  
+};
+
+updateExtraPracticeSkillStatusByUser = function(dataObject){
+	 
+    $.ajax({
+        url: "/skill/updateextrapracticeskillstatusbyuser",
+        type: 'PATCH',
+        dataType: 'json',
+        data: JSON.stringify(dataObject)
+
+    })
+    .done(function(responseText) {
+        var url = new URL(window.location.href);
+        url.searchParams.set("mode", "extrapracticecorrections");
+        window.location = url;
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        if(jqXHR.status === 401){
+            sessionTimeOut();
+        }
+        else{
+            logError(window.location.href, jqXHR);
+        }
+    })
+    .always(function() {
+        //nothing
+    });  
+};
+
+updateAssessmentStatusByUser = function(dataObject){
+		 
+    $.ajax({
+        url: "/skill/updateassessmentstatusbyuser",
+        type: 'PATCH',
+        dataType: 'json',
+        data: JSON.stringify(dataObject)
+
+    })
+    .done(function(responseText) {
+        var url = new URL(window.location.href);
+        url.searchParams.set("mode", "assessmentcorrections");
+        window.location = url;
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        if(jqXHR.status === 401){
+            sessionTimeOut();
+        }
+        else{
+            logError(window.location.href, jqXHR);
         }
     })
     .always(function() {
