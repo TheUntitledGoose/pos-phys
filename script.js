@@ -11,7 +11,7 @@
 // ==/UserScript==
 
 var $ = window.jQuery;
-const dev = true;
+const dev = false;
 if (dev) console.log("dev")
 function blockAndReplaceScript() {
     const scripts = document.querySelectorAll('script');
