@@ -12,6 +12,9 @@
 
 //set global default variables
 gravm = 9.8;
+chat_messages = [];
+most_recent_prob_markdown = "";
+successfully_stored_answers = true;
 
 var nameSpace = {
 };
@@ -45,6 +48,9 @@ $(document).ready(function() {
 	//control the type of input allows for specific problems
     //returns true or false as a way of allowing or disallowing the input
     $("#problemHTML").on("keypress", "input[name=answer]", function (event) {
+
+        //remove incorrectAnswer class for incorrect answers regardless once they start typing
+    	$(this).removeClass("incorrectAnswer");
 
         if($(this).hasClass("symbolicanswer")) {
             return true;
@@ -1614,64 +1620,38 @@ checkProblemValidity = function(problemID){
 	nameSpace.problemValidity = validProblemBoolean;
 };
 
+var checkAnswersPaused = false;
+
 checkAnswers = function(answerMap, cbdFlag){
-	
 	var problemValidity = nameSpace.problemValidity;
 	if(!problemValidity){
 		alert("For security purposes, trial users may only check answers on first 25% of work questions after trial units.");
 		return;
 	}
-
-    // var lateWorkInProgress = nameSpace.lateWorkInProgress;
-    // var lateWorkInProgressResponse;
-    // lateWorkInProgress = false;
-    // if(lateWorkInProgress === false){
-    //     var problemType = nameSpace.problemType;
-    //     var skillID = nameSpace.skillID;
-
-    //     $.ajax({
-    //         url: "/skill/lateworkinprogress",
-    //         type: 'POST',
-    //         dataType: 'json',
-    //         async: false,
-    //         data: JSON.stringify({
-    //             problemType: problemType,
-    //             skillID: skillID
-    //         })
-    //     })
-    //     .done(function(responseText) {
-    //         var data = responseText.data;
-    //         lateWorkInProgressResponse = JSON.parse(data.late_work_in_progress);
-    //     })
-    //     .fail(function(jqXHR, textStatus, errorThrown) {
-    //         if(jqXHR.status === 401){
-    //             sessionTimeOut();
-    //         }
-    //         else{
-    //             logError(window.location.href, jqXHR);
-    //         }
-    //     })
-    //     .always(function() {
-    //         //nothing
-    //     });
-    // }
-
-    // // do a popup for check answers when late work is in progress and the late work warning message is not shown
-    // if(lateWorkInProgressResponse === true && nameSpace.lateWorkWarningMessageIsVisible === false){
-    //     var confirmationPhrase = "The due date has now passed. Checking answers now will mark the assignment late. Are you sure you want to proceed?";
-    //     var confirmation = confirm(confirmationPhrase);
-    //     if(confirmation === false){
-    //         return;
-    //     }
-    // }
+    if(checkAnswersPaused){
+        alert("You must wait at least half a second between answer checks.");
+        return;
+    }
+    checkAnswersPaused = true;
+    setTimeout(function(){
+        checkAnswersPaused = false;
+    }, 500);
 
     var problemID = nameSpace.problemID;
     var problemType = nameSpace.problemType;
     var skillID = nameSpace.skillID;
     var skillType = nameSpace.skillType;
     var unitID = nameSpace.unitID;
+    var up_id = nameSpace.up_id;
     var answerString = JSON.stringify(answerMap);
-    
+
+    if (!successfully_stored_answers) {
+        alert("It seems the server had a problem storing your problem. Wait 10 seconds, try submitting again, and if it still doesn't work, try refreshing the page.");
+        // Throw an error to log the issue
+        throw new Error("Problem answers not yet stored on server by time of answer check.");
+        return;
+    }
+
     $.ajax({
         url: "/skill/checkuseranswers",
         type: 'POST',
@@ -1684,7 +1664,8 @@ checkAnswers = function(answerMap, cbdFlag){
             skillType: skillType,
             problemType: problemType,
             cbdFlag: cbdFlag,
-            lateWorkWarningVisible: nameSpace.lateWorkWarningMessageIsVisible
+            lateWorkWarningVisible: nameSpace.lateWorkWarningMessageIsVisible,
+            up_id: up_id
         })
     })
     .done(function(responseText) {
@@ -1692,6 +1673,9 @@ checkAnswers = function(answerMap, cbdFlag){
         var data = responseText.data; 
     
         setSkillScores(data);
+        // checkLMSSkillCompletion(data);
+        // updateLMSSubmissionStatus(0);
+        // updateUnitLMSSubmissionStatus(0);
         
         if(cbdFlag){
             if(!data.cbd){
@@ -1840,6 +1824,8 @@ displayProblem = function(problem){
     
 	nameSpace.problem = problem;
 	nameSpace.problemID = problem.problem_id;
+
+    nameSpace.up_id = problem.up_id;
 
     //replace unicode with words
     problem = replaceProblemText(problem);
@@ -2095,12 +2081,16 @@ generateProblemData = function(problem){
     // if(true){
         // First time problem has been visited, so now we have to go through and generate all the randoms
         var dataObject = createProblemDataObject(problem);
+
+        successfully_stored_answers = false;
         
         storeProblemGeneratedData(dataObject);
     } 
     else if (problem.newStyleProblem) {
         // Do nothing
+        successfully_stored_answers = true;
     } else {
+        successfully_stored_answers = true;
 
         // If old-style problem with stored html and js, but the js isn't included
         // assume it's the second time we've visited and grab all the randoms and
@@ -2232,10 +2222,10 @@ createProblemDataObject = function(problem){
         // for all answers that are a number, set the value of answer boxes to answervalue
         for (var i = 0; i < answerValues.length; i++) {
             const answerBoxes = document.querySelectorAll("[name=answer]")
-            const isNegative = answerBoxes[i].classList.contains("allownegative")
+            // const isNegative = answerBoxes[i].classList.contains("[type=text]")
 
             // no clue if this works
-            if (isNegative) answerBoxes[i].value = answerValues[i]
+            // if (isNegative) answerBoxes[i].value = answerValues[i]
         }
 
     } else {
@@ -2300,6 +2290,7 @@ storeProblemGeneratedData = function(dataObject){
     })
     .done(function() {
         console.log(answerValues)
+        successfully_stored_answers = true;
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
         if(jqXHR.status === 401){
