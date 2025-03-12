@@ -4,6 +4,8 @@
 # ❗ Usage ❗
 Extension: Tampermonkey.
 
+**IMPORTANT: IF ON CHROME YOU HAVE TO ENABLE DEVELOPER MODE**
+
 Paste the **script.js** in a new script tab and go to a <u>***new problem***</u>.
 
 # TROUBLESHOOTING
