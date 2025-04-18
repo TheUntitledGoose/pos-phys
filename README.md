@@ -16,6 +16,11 @@ TL;DR: Only works on <u>***new problems***</u>.
  - Assesment: ¯\\\_(ツ)_/¯
 
 ### side note
+
+![THE BEST HACKERS KNOW PHYSICS SO DO YOUR HOAEWORK:)](https://github.com/user-attachments/assets/7857ac9a-2fdd-4351-89d9-7db6b78448fa)
+
+chat, this is so sad. except i don't think this breaks my thing lol
+
 They have a whole essay in their code to get rid of this. 
 There's another repo for positive physics hack from 2019 made by some guy who made a bookmarklet. 
 I just thought it was interesting no one made a positive physics hack in such a long time.
