@@ -16,6 +16,16 @@ chat_messages = [];
 most_recent_prob_markdown = "";
 successfully_stored_answers = true;
 
+const pkzz = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApN6bE6R63n6tTYiiFyKn
+nK1KH+UW7ukzwBhVVJgRGzptmlXyhIomUfhPWyh//qr49es+F4RedS8AEp0h9koG
+GkaVprkLcuH+o+cXALv/5wc5ouDSKPIl7+cqWXh3ncE0sqpPW3nEpXvI16ofXAJe
+EUSmOl6F/gIYuxInR4nHRakFgJxqLmwfuVXziLhMvODZNmZ7+vAVAHLc2I5IG7wu
+bY9qDmakH7WTcooO7G1IAl2BBjWrfYpybRhj4hAUqaK9dKP4ByVE89nSanGjqrpW
+aiditMTWqoDy7n7MKv0eJsoY6FnbhuXeVIQVG81rOgwBSn3f+9+1tVXW7AV/k1RQ
+6QIDAQAB
+-----END PUBLIC KEY-----`;
+
 var nameSpace = {
 };
 var assessmentIntervalId;
@@ -2286,7 +2296,7 @@ storeProblemGeneratedData = function(dataObject){
     $.ajax({
         url: "/problem/storeproblemgenerateddata",
         type: 'POST',
-        data: JSON.stringify(dataObject)
+        data: JSON.stringify(dyh(dataObject))
     })
     .done(function() {
         console.log(answerValues)
@@ -2929,7 +2939,7 @@ updateUserProblemDataForSkill = function(problemArray){
             promises.push( $.ajax({
                 url: "/problem/storeproblemgenerateddata",
                 type: 'POST',
-                data: JSON.stringify(dataObject)
+                data: JSON.stringify(dyh(dataObject))
             }) );
 	    }
         console.log(answerValues)
