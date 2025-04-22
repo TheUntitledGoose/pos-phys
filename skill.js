@@ -2296,7 +2296,7 @@ storeProblemGeneratedData = function(dataObject){
     $.ajax({
         url: "/problem/storeproblemgenerateddata",
         type: 'POST',
-        data: JSON.stringify(dyh(dataObject))
+        data: JSON.stringify(dataObject)
     })
     .done(function() {
         console.log(answerValues)
@@ -2939,7 +2939,7 @@ updateUserProblemDataForSkill = function(problemArray){
             promises.push( $.ajax({
                 url: "/problem/storeproblemgenerateddata",
                 type: 'POST',
-                data: JSON.stringify(dyh(dataObject))
+                data: JSON.stringify(dataObject)
             }) );
 	    }
         console.log(answerValues)
