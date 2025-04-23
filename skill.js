@@ -2212,8 +2212,8 @@ createProblemDataObject = function(problem){
             // Simple logic to detect if current answer is unit via '/'
             // if so, edit the previous line to include unit
             // TODO
-            if (answerValues[i].toString().includes('/')) {
-                console.log(imgui.elements)
+            if ( /[a-zA-Z]/.test(answerValues[i].toString()) ) {
+                // console.log(imgui.elements)
                 imgui.elements[i-skipped].text += " " + answerValues[i];
                 skipped++;
             } else {
@@ -2232,10 +2232,8 @@ createProblemDataObject = function(problem){
         // for all answers that are a number, set the value of answer boxes to answervalue
         for (var i = 0; i < answerValues.length; i++) {
             const answerBoxes = document.querySelectorAll("[name=answer]")
-            // const isNegative = answerBoxes[i].classList.contains("[type=text]")
-
-            // no clue if this works
-            // if (isNegative) answerBoxes[i].value = answerValues[i]
+            
+            answerBoxes[i].value = answerValues[i]
         }
 
     } else {
