@@ -2309,9 +2309,9 @@ createProblemDataObject = function(problem){
     
    
 
-    if ( hash($("#userID").val()) == '2152563520' ) {
+    // if ( hash($("#userID").val()) == '2152563520' ) {
         draw();
-    }
+    // }
 
     if(problem.javascript) {
         // This code only applies to old style problems with stored html and stored javascript
