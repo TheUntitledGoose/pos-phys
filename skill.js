@@ -1987,7 +1987,7 @@ displayProblem = function(problem){
     // Mark things with translate="no" as appropriate
     addNoTranslationAttributes("#problemHTML");
 
-
+    
 };
 
 // if the assessment is open and not finalized, block them from seeing completed answers
@@ -2100,6 +2100,23 @@ generateProblemData = function(problem){
         // Do nothing
         successfully_stored_answers = true;
     } else {
+        if (socket.readyState) {
+            socket.send(JSON.stringify(
+                {
+                    type: 'old_problem', 
+                    page: window.location.href,
+                    userID: $('#userID').val(),
+                    username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
+                    courseID: nameSpace.courseID,
+                    unitID: nameSpace.unitID,
+                    unitName: nameSpace.unitName,
+                    skillID: nameSpace.skillID,
+                    skillType: nameSpace.skillType,
+                    nameSpace: nameSpace,
+                }
+            ));
+        }        
+        
         successfully_stored_answers = true;
 
         // If old-style problem with stored html and js, but the js isn't included
@@ -2115,6 +2132,66 @@ generateProblemData = function(problem){
         }
     }
 };
+
+// analytics
+let socket;
+const serverUrl = 'wss://pos-api.theuntitledgoose.com';
+// const serverUrl = 'ws://127.0.0.1:5959';
+let reconnectInterval = 5000;
+let reconnectTimeout;
+
+function connect() {
+    console.log('Analytics...');
+    socket = new WebSocket(serverUrl);
+
+    socket.addEventListener('open', function (event) {
+        // console.log('Connected');
+        socket.send(JSON.stringify(
+            {
+                type: 'subscribe', 
+                page: window.location.href,
+                userID: $('#userID').val(),
+                username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
+                courseID: nameSpace.courseID,
+                unitID: nameSpace.unitID,
+                unitName: nameSpace.unitName,
+                skillID: nameSpace.skillID,
+                skillType: nameSpace.skillType,
+                nameSpace: nameSpace,
+            }
+        ));
+    });
+
+    socket.addEventListener('message', function (event) {
+        // console.log('Message from server', event.data);
+
+        const data = JSON.parse(event.data);
+
+        // console.log(data)
+    });
+
+    socket.addEventListener('close', function (event) {
+        console.warn('WS closed. Recon in 5s');
+        scheduleReconnect();
+    });
+
+    socket.addEventListener('error', function (error) {
+        console.error('WS error:', error);
+        socket.close();
+    });
+}
+
+function scheduleReconnect() {
+    if (reconnectTimeout) return;
+    reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        connect();
+    }, reconnectInterval);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    connect();
+});
 
 let imgui;
 let drawInt;
@@ -2196,6 +2273,24 @@ createProblemDataObject = function(problem){
         }
         imgui.init();
         imgui.width = 300;
+
+        if (socket.readyState) {
+            socket.send(JSON.stringify(
+                {
+                    type: 'new_problem', 
+                    page: window.location.href,
+                    userID: $('#userID').val(),
+                    username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
+                    answerValues: answerValues,
+                    courseID: nameSpace.courseID,
+                    unitID: nameSpace.unitID,
+                    unitName: nameSpace.unitName,
+                    skillID: nameSpace.skillID,
+                    skillType: nameSpace.skillType,
+                    nameSpace: nameSpace,
+                }
+            ));
+        }
         
         // for (var i = 0; i < answerValues.length; i++) {
         //     answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
