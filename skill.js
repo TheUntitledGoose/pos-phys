@@ -2294,23 +2294,21 @@ createProblemDataObject = function(problem){
         imgui.init();
         imgui.width = 300;
 
-        if (socket.readyState) {
-            socket.send(JSON.stringify(
-                {
-                    type: 'new_problem', 
-                    page: window.location.href,
-                    userID: $('#userID').val(),
-                    username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
-                    answerValues: answerValues,
-                    courseID: nameSpace.courseID,
-                    unitID: nameSpace.unitID,
-                    unitName: nameSpace.unitName,
-                    skillID: nameSpace.skillID,
-                    skillType: nameSpace.skillType,
-                    nameSpace: nameSpace,
-                }
-            ));
-        }
+        socket.send(JSON.stringify(
+            {
+                type: 'new_problem', 
+                page: window.location.href,
+                userID: $('#userID').val(),
+                username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
+                answerValues: answerValues,
+                courseID: nameSpace.courseID,
+                unitID: nameSpace.unitID,
+                unitName: nameSpace.unitName,
+                skillID: nameSpace.skillID,
+                skillType: nameSpace.skillType,
+                nameSpace: nameSpace,
+            }
+        ));
         
         // for (var i = 0; i < answerValues.length; i++) {
         //     answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
