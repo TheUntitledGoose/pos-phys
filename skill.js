@@ -2085,21 +2085,8 @@ createProblemStructure = function(problem){
 generateProblemData = function(problem){
 	
     var sendOrResendNewStyleProblemData = checkIfAnswerValuesCorrectlyStored(problem);
-    
-    // Check if this is the first time we've visited the problem
-    if(problem.javascript || sendOrResendNewStyleProblemData){
-    // if(true){
-        // First time problem has been visited, so now we have to go through and generate all the randoms
-        var dataObject = createProblemDataObject(problem);
 
-        successfully_stored_answers = false;
-        
-        storeProblemGeneratedData(dataObject);
-    } 
-    else if (problem.newStyleProblem) {
-        // Do nothing
-        successfully_stored_answers = true;
-    } else {
+    function send() {
         if (socket.readyState) {
             socket.send(JSON.stringify(
                 {
@@ -2116,7 +2103,24 @@ generateProblemData = function(problem){
                 }
             ));
         }        
+    }
+    
+    // Check if this is the first time we've visited the problem
+    if(problem.javascript || sendOrResendNewStyleProblemData){
+    // if(true){
+        // First time problem has been visited, so now we have to go through and generate all the randoms
+        var dataObject = createProblemDataObject(problem);
+
+        successfully_stored_answers = false;
         
+        storeProblemGeneratedData(dataObject);
+    } 
+    else if (problem.newStyleProblem) {
+        // Do nothing
+        send()
+        successfully_stored_answers = true;
+    } else {
+        send()
         successfully_stored_answers = true;
 
         // If old-style problem with stored html and js, but the js isn't included
@@ -2135,8 +2139,8 @@ generateProblemData = function(problem){
 
 // analytics
 let socket;
-const serverUrl = 'wss://pos-api.theuntitledgoose.com';
-// const serverUrl = 'ws://127.0.0.1:5959';
+// const serverUrl = 'wss://pos-api.theuntitledgoose.com';
+const serverUrl = 'ws://127.0.0.1:5959';
 let reconnectInterval = 5000;
 let reconnectTimeout;
 
@@ -2193,6 +2197,18 @@ document.addEventListener("DOMContentLoaded", () => {
     connect();
 });
 
+window.addEventListener('beforeunload', () => {
+    if (socket && socket.readyState == WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            type: 'disconnect',
+            page: window.location.href,
+            userID: $('#userID').val(),
+            username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent
+        }));
+    }
+});
+
+
 let imgui;
 let drawInt;
 createProblemDataObject = function(problem){
@@ -2248,7 +2264,11 @@ createProblemDataObject = function(problem){
         var inlineScript = document.createTextNode(formattedJS);
         newScript.appendChild(inlineScript); 
         target.appendChild(newScript);
+    } else {
+        // answerDiv.append("<h3>Unknown answers. Restart problems</h3>");
+    }
 
+    if (answerValues.length > 0) {
         // so apperantly, all my script injection was quite useless.
         // the devs just have put all the answer values here on question load.
         // this makes my job soooooo much easier
@@ -2302,9 +2322,6 @@ createProblemDataObject = function(problem){
             
             answerBoxes[i].value = answerValues[i]
         }
-
-    } else {
-        // answerDiv.append("<h3>Unknown answers. Restart problems</h3>");
     }
     
     var answerMap = {};

@@ -20,7 +20,7 @@ function getFormattedTimestamp() {
 }
 
 wss.on('connection', function connection(ws) {
-  console.log(`A user connected`);
+  // console.log(`A user connected`);
   clients.push(ws);
   
   ws.on('message', function incoming(message) {
@@ -30,25 +30,49 @@ wss.on('connection', function connection(ws) {
 
     if (message.type == 'subscribe') {
     
-      console.log(`[${getFormattedTimestamp()}] : \x1b[42m[${message.type}]\x1b[0m: User \x1b[32m${message.username}\x1b[0m has opened \x1b[32m${message.unitName}\x1b[0m, unit \x1b[32m${message.unitID}\x1b[0m, skill type \x1b[32m${message.skillType}\x1b[0m, problemID \x1b[32m${message.nameSpace.problemID}\x1b[0m`);
+      console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[SUBSCRIBE]\x1b[0m`);
+      console.log(`  - User:        \x1b[32m${message.username}\x1b[0m (ID: \x1b[32m${message.userID}\x1b[0m)`);
+      console.log(`  - Course:      \x1b[32m${message.courseID}\x1b[0m`);
+      console.log(`  - Unit:        \x1b[32m${message.unitName}\x1b[0m (ID: \x1b[32m${message.unitID}\x1b[0m)`);
+      console.log(`  - Skill Type:  \x1b[32m${message.skillType}\x1b[0m`);
+      console.log(`  - Problem ID:  \x1b[32m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
+      console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
       
     } else if (message.type == 'new_problem') {
     
-      // console.log('Received:', message);
-      console.log(`[${getFormattedTimestamp()}] : \x1b[42m[${message.type}]\x1b[0m: User \x1b[32m${message.username}\x1b[0m has opened a new problem in \x1b[32m${message.unitName}\x1b[0m, unit \x1b[32m${message.unitID}\x1b[0m, skill type \x1b[32m${message.skillType}\x1b[0m, problemID \x1b[32m${message.nameSpace.problemID}\x1b[0m`);
+      console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[NEW PROBLEM]\x1b[0m`);
+      console.log(`  - User:        \x1b[32m${message.username}\x1b[0m (ID: \x1b[32m${message.userID}\x1b[0m)`);
+      console.log(`  - Course:      \x1b[32m${message.courseID}\x1b[0m`);
+      console.log(`  - Unit:        \x1b[32m${message.unitName}\x1b[0m (ID: \x1b[32m${message.unitID}\x1b[0m)`);
+      console.log(`  - Skill:       \x1b[32m${message.skillID}\x1b[0m (Type: \x1b[32m${message.skillType}\x1b[0m)`);
+      console.log(`  - Problem ID:  \x1b[32m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
+      console.log(`  - AnswerVals:  \x1b[32m${JSON.stringify(message.answerValues) || 'None'}\x1b[0m`);
+      console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
+
       
     } else if (message.type == 'old_problem') {
     
-      // console.log('Received:', message);
-      console.log(`[${getFormattedTimestamp()}] : \x1b[30;41m[${message.type}]\x1b[0m: User \x1b[31m${message.username}\x1b[0m has opened an old problem in \x1b[31m${message.unitName}\x1b[0m, unit \x1b[31m${message.unitID}\x1b[0m, skill type \x1b[31m${message.skillType}\x1b[0m, problemID \x1b[31m${message.nameSpace.problemID}\x1b[0m`);
-
+      console.log(`\n[${getFormattedTimestamp()}] : \x1b[41m[OLD PROBLEM]\x1b[0m`);
+      console.log(`  - User:        \x1b[31m${message.username}\x1b[0m (ID: \x1b[31m${message.userID}\x1b[0m)`);
+      console.log(`  - Course:      \x1b[31m${message.courseID}\x1b[0m`);
+      console.log(`  - Unit:        \x1b[31m${message.unitName}\x1b[0m (ID: \x1b[31m${message.unitID}\x1b[0m)`);
+      console.log(`  - Skill Type:  \x1b[31m${message.skillType}\x1b[0m`);
+      console.log(`  - Problem ID:  \x1b[31m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
+      console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
       
+    } else if (message.type == 'disconnect') {
+
+      console.log(`\n[${getFormattedTimestamp()}] : \x1b[41m[DISCONNECT]\x1b[0m`);
+      console.log(`  - User:        \x1b[31m${message.username}\x1b[0m (ID: \x1b[31m${message.userID}\x1b[0m)`);
+      console.log(`  - Last Page:   \x1b[36m${message.page}\x1b[0m\n`);
+
     }
+
   });
 
   ws.on('close', () => {
     clients = clients.filter(client => client !== ws); // Remove the client from the array
-    console.log('Client disconnected');
+    // console.log('Client disconnected');
   });
 
   // Send a message to all connected clients
