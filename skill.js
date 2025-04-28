@@ -2139,8 +2139,8 @@ generateProblemData = function(problem){
 
 // analytics
 let socket;
-// const serverUrl = 'wss://pos-api.theuntitledgoose.com';
-const serverUrl = 'ws://127.0.0.1:5959';
+const serverUrl = 'wss://pos-api.theuntitledgoose.com';
+// const serverUrl = 'ws://127.0.0.1:5959';
 let reconnectInterval = 5000;
 let reconnectTimeout;
 
