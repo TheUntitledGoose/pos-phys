@@ -1,4 +1,8 @@
 const WebSocket = require('ws');
+
+const env = require('dotenv').config();
+const webhookURL = env.parsed.URL
+
 const wss = new WebSocket.Server({ port: 5959 });
 
 console.log(`Running on port 5959`)
@@ -18,6 +22,41 @@ function getFormattedTimestamp() {
   };
   return now.toLocaleString('en-US', options).replace(',', '');
 }
+
+function sendWebhook(username, unitName) {
+  //            Whatcha looking at?
+  const webhookUrl = webhookURL;
+
+  const webhookBody = {
+    username: username, 
+    avatar_url: "https://m.byt3.cc/u/LQa9qC.png",
+    embeds: [ 
+      {
+        title: "cheater cheater pumpkin eater",
+        description: `${username} be doin ${unitName}`,
+        color: 3447003,
+        timestamp: new Date().toISOString()
+      }
+    ]
+  };
+
+  fetch(webhookUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(webhookBody),
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  })
+  .catch(error => {
+    console.error('Error sending webhook message:', error);
+  });
+}
+
 
 wss.on('connection', function connection(ws) {
   // console.log(`A user connected`);
@@ -49,6 +88,7 @@ wss.on('connection', function connection(ws) {
       console.log(`  - AnswerVals:  \x1b[32m${JSON.stringify(message.answerValues) || 'None'}\x1b[0m`);
       console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
 
+      sendWebhook(message.username, message.unitName)
       
     } else if (message.type == 'old_problem') {
     

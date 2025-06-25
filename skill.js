@@ -2197,18 +2197,6 @@ document.addEventListener("DOMContentLoaded", () => {
     connect();
 });
 
-window.addEventListener('beforeunload', () => {
-    if (socket && socket.readyState == WebSocket.OPEN) {
-        socket.send(JSON.stringify({
-            type: 'disconnect',
-            page: window.location.href,
-            userID: $('#userID').val(),
-            username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent
-        }));
-    }
-});
-
-
 let imgui;
 let drawInt;
 createProblemDataObject = function(problem){
