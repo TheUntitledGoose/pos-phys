@@ -7,43 +7,83 @@
 // 2. then run "npm install" inside that folder (install npm if you don't have it yet)
 // 3. edit defaultInstance.js file inside that package and make it look like this:
 
+
+
 // import * as all from './factoriesAny.js'
 // import { create } from './core/create.js'
+// import { isMatrix } from './utils/is.js'
+
 // const math = create(all)
+
+// const unwrap = function(output) {
+//     if (Array.isArray(output)) {
+//         // Check if it's a 1 by 1 array like [[5]]
+//         if (output.length === 1 && Array.isArray(output[0]) && output[0].length === 1) {
+//             return output[0][0];
+//         } else {
+//             return output;
+//         }
+//     }
+//     else if (isMatrix(output)) {
+//         let size = output.size();
+//         // size is a 2 element array, the first element is the number of rows and the second element is the number of columns
+//         // check if it's a 1 by 1 matrix
+//         if (size[0] === 1 && size[1] === 1) {
+//             return output.get([0,0]);
+//         } else {
+//             return output;
+//         }
+//     }
+//     else {
+//         return output;
+//     }
+// }
+
 // math.import({
-    // getTableVal: function (table, element, characteristic) {
-    //     return table[element-1][characteristic];
-    // },
-    // // The next function was created for Abi but can be used by anyone.
-    // // use like this:
-    // // i = [1,3,5,7,9]
-    // // seed = randomInt(99999)
-    // // r = sort(i,seedOrder(seed))
-    // seedOrder: function(seed) {
-    //     return function() {
-    //         var t = seed += 0x6D2B79F5;
-    //         t = Math.imul(t ^ t >>> 15, t | 1);
-    //         t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    //         return ((t ^ t >>> 14) >>> 0) / 4294967296-0.5;
-    //     }
-    // },
-    // sigFig: function(number,figs) {
-    //     // There's a little hack here to force rounding up if it's very close to the deciding digit being exactly 5
-    //     // This is required because of floating point errors that sometimes turn 10.575 into 10.57499999999998 or something like that.
-    //     return Number((number*(1+.000001/(10 ** figs))).toPrecision(figs));
-    // },
-    // decFig: function(number,figs) {
-    //     return Number(math.round(number,figs));
-    // },
-    // showIf: function(condition) {
-    //     if (condition) {
-    //         return 1;
-    //     } else {
-    //         return Infinity;
-    //     }
-    // }
+//     getTableVal: function (table, element, characteristic) {
+//         return table[element-1][characteristic];
+//     },
+//     // The next function was created for Abi but can be used by anyone.
+//     // use like this:
+//     // i = [1,3,5,7,9]
+//     // seed = randomInt(99999)
+//     // r = sort(i,seedOrder(seed))
+//     seedOrder: function(seed) {
+//         return function() {
+//             var t = seed += 0x6D2B79F5;
+//             t = Math.imul(t ^ t >>> 15, t | 1);
+//             t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+//             return ((t ^ t >>> 14) >>> 0) / 4294967296-0.5;
+//         }
+//     },
+//     sigFig: function(number,figs) {
+//         // There's a little hack here to force rounding up if it's very close to the deciding digit being exactly 5
+//         // This is required because of floating point errors that sometimes turn 10.575 into 10.57499999999998 or something like that.
+//         return Number((number*(1+.000001/(10 ** figs))).toPrecision(figs));
+//     },
+//     decFig: function(number,figs) {
+//         return Number(math.round(number,figs));
+//     },
+//     showIf: function(condition) {
+//         if (condition) {
+//             return 1;
+//         } else {
+//             return Infinity;
+//         }
+//     },
+//     column_old: function(value, column) {
+//         let output = math.column(value,column-1);
+//         return unwrap(output);
+//     },
+//     row_old: function(value, row) {
+//         let output = math.row(value,row-1);
+//         return unwrap(output);
+//     },
 // });
+
 // export default math
+
+
 
 // 4. run "npm run build" in that directory
 // 5. grab /lib/browser/math.js after the build completes and put it in /js/auxiliary/custom_mathjs_bundle/
@@ -127,7 +167,7 @@ const newRoundNice = function(input, statement, custom_rounding) {
     } else if (typeof input == "number" && fixed_decimal >= 0) {
         // Exact number of decimal places to include in the string
         // math.js round is better than toFixed because it handles floating point weirdness automatically
-        return math.round(input,fixed_decimal);
+        return input.toFixed(fixed_decimal);
     } else if (typeof input == "number") {
         // Default rounding behavior of custom_rounding = "" that is sf = -1 and fixed_decimal = -1
         let absinput = Math.abs(input);
@@ -254,7 +294,7 @@ problemRender = function (html, custom_math, destination, only_randoms, custom_r
                     if ($(this1).data("styles") !== undefined && $(this1).data("styles") !== $(this).data("styles")) {
                         $(this).css($(this1).data("styles"));
                     }
-                    // If differences remain, update the whole thing
+                    // If img and if src is different, update the src
                     if ($(this1).is("img") && $(this).attr("src") != $(this1).attr("src")) {
                         $(this).attr("src", $(this1).attr("src"));
                     } else if (this.outerHTML != this1.outerHTML) {
@@ -397,6 +437,182 @@ function getDynDropDownStatements(destination) {
     return return_array;
 }
 
+/**
+ * FRQ Widget Class - Represents a Free Response Question widget
+ */
+class FrqWidget {
+    constructor(contents, get_next_answer_id) {
+        this.contents = contents;
+        this.get_next_answer_id = get_next_answer_id;
+        this.element = null;
+        this.points = [];
+        this.init();
+    }
+
+    init() {
+        // Parse and split the contents
+        let split = this.contents.split("\n");
+        let splittrim = split.map(item => splitOnFirstEqual(item));
+        
+        // Extract points
+        this.points = splittrim.filter(item => item[0] === "point");
+        let numPoints = this.points.length;
+
+        // Find the question line
+        let questionLine = splittrim.find(item => item[0] === "question");
+        let questionText = questionLine ? questionLine[1] : "\"No question text provided\"";
+        // strip off leading and trailing quotes
+        if (questionText.startsWith('"') && questionText.endsWith('"')) {
+            questionText = questionText.slice(1, -1);
+        }
+        
+        // Create the main container
+        this.element = $("<div class='ppFrq'>");
+
+        // Store a reference to the widget object in the element for later use
+        this.element.data("frqWidget", this);
+
+        questionText = questionText.replace(/\*(\S.*?\S|\S)\*/g, '<span class="pp-tag-v">$1</span>');
+        // replace all \n with <br> tags
+        questionText = questionText.replace(/\\n/g, "<br>");
+        $("<p>").html(questionText).appendTo(this.element);
+        
+        // Create the main textarea
+        let textarea = $("<textarea onpaste='return false;' id='" + this.get_next_answer_id() + "' name='answer' rows='5' cols='50' placeholder='Type your answer here (You may NOT paste into this box)...'></textarea>");
+        textarea.appendTo(this.element);
+        textarea.data("answer", "ppfrq:" + this.contents);
+        
+        // Create dummy hidden inputs for additional points
+        for (let i = 0; i < numPoints - 1; i++) {
+            let dummyInput = $("<input type='hidden' id='" + this.get_next_answer_id() + "' name='answer'/>");
+            dummyInput.attr("value", "-1");
+            dummyInput.data("answer", "ppfrqdummy");
+            dummyInput.appendTo(this.element);
+        }
+        
+        // Create the grading section
+        this.createGradingSection();
+    }
+
+    createGradingSection() {
+        this.gradingDiv = $("<div class='ppFrqGrading'>");
+        
+        for (let i = 0; i < this.points.length; i++) {
+            let point_string = this.points[i][1];
+            // Strip off leading and trailing whitespace
+            point_string = point_string.trim();
+            // Strip off leading and trailing quotes
+            if (point_string.startsWith('"') && point_string.endsWith('"')) {
+                point_string = point_string.slice(1, -1);
+            } else if (point_string.startsWith("'") && point_string.endsWith("'")) {
+                point_string = point_string.slice(1, -1);
+            }
+            // Take everything before the first { character as the point description
+            let point_name = point_string.split("{")[0].trim();
+
+            let pointDiv = $("<div><span class='ppFrqStatus ppFrqNotYetCorrect'>__</span> " + point_name + "&nbsp;&nbsp;&nbsp;<span class='ppFrqFeedback'></span></div>");
+            pointDiv.appendTo(this.gradingDiv);
+        }
+        
+        this.gradingDiv.appendTo(this.element);
+    }
+
+    /**
+     * Update the status of a specific point
+     * @param {number} pointIndex - Zero-based index of the point to update
+     * @param {string} status - The status text to display (e.g., "✓", "✗", "__")
+     */
+    updatePointStatus(pointIndex, status) {
+        let correct = '<i class="fas fa-check" style="color: #006400;"></i>';
+        let incorrect = "❌";
+        let correct_on_resubmit = '<i class="fas fa-check-double" style="color: #199c19;"></i>';
+
+        let status_html = "";
+
+        if (status == "correct") {
+            status_html = correct;
+            this.gradingDiv.children().eq(pointIndex).find('.ppFrqStatus').removeClass('ppFrqNotYetCorrect');
+        } else if (status == "incorrect") {
+            status_html = incorrect;
+            this.gradingDiv.children().eq(pointIndex).find('.ppFrqStatus').addClass('ppFrqNotYetCorrect');
+        } else if (status == "correct_on_resubmit") {
+            status_html = correct_on_resubmit;
+            this.gradingDiv.children().eq(pointIndex).find('.ppFrqStatus').removeClass('ppFrqNotYetCorrect');
+            this.gradingDiv.children().eq(pointIndex).find('.ppFrqStatus').addClass('ppFrqCorrectOnResubmit');
+        }
+
+        if (pointIndex >= 0 && pointIndex < this.points.length) {
+            this.gradingDiv.children().eq(pointIndex).find('.ppFrqStatus').html(status_html);
+        }
+
+        // Check if there are any remaining points that are not yet correct by checking if any items of class ppFrqNotYetCorrect exist inside gradingDiv
+        if (this.gradingDiv.find('.ppFrqNotYetCorrect').length === 0) {
+            // set the textarea to be green background
+            let ta = this.element.find('textarea');
+            // if fully correct (nothing in gradingDiv has class ppFrqCorrectOnResubmit)
+            if (this.gradingDiv.find('.ppFrqCorrectOnResubmit').length === 0) {
+                ta.addClass("correctAnswer");
+                ta.attr("aria-label", "Correct Answer");
+            } else {
+                ta.addClass("correctAnswerMulti");
+                ta.attr("aria-label", "Corrected Answer");
+            }
+            ta.prop('disabled', true);
+        }
+
+    }
+    
+    updateFeedback(pointIndex, text) {
+        if (pointIndex >= 0 && pointIndex < this.points.length) {
+            this.gradingDiv.children().eq(pointIndex).find('.ppFrqFeedback').text(text);
+        }
+    }
+
+    // /**
+    //  * Update all point statuses at once
+    //  * @param {Array<string>} statuses - Array of status strings
+    //  */
+    // updateAllPointStatuses(statuses) {
+    //     for (let i = 0; i < Math.min(statuses.length, this.points.length); i++) {
+    //         this.updatePointStatus(i, statuses[i]);
+    //     }
+    // }
+
+    /**
+     * Get the jQuery element representing this widget
+     * @returns {jQuery} The widget element
+     */
+    getElement() {
+        return this.element;
+    }
+
+    /**
+     * Get the number of points in this FRQ
+     * @returns {number} Number of points
+     */
+    getPointCount() {
+        return this.points.length;
+    }
+
+    /**
+     * Get the original contents string
+     * @returns {string} The contents string
+     */
+    getContents() {
+        return this.contents;
+    }
+
+    /**
+     * Update the contents and rebuild the widget
+     * @param {string} newContents - The new contents string
+     */
+    updateContents(newContents) {
+        this.contents = newContents;
+        this.element.empty();
+        this.init();
+    }
+}
+
 function renderContainer(destination, custom_math, only_randoms, custom_rounding, dyndropdown_statements, vars, answerValues, sim) {
     console.log(destination)
     // Default is a dummy which is really only used for simulation rerendering
@@ -415,6 +631,14 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
     if (destination.find('supermc').length > 0) {
         hasSuperMc = true;
     }
+
+    // aionly tags
+    destination.find('aionly').each(function (index) {
+        var contents = cleanContents($(this).html());
+        // Actually replace the item with a span that we will populate in a minute with the correct numbers
+        let newNode = $("<span class='aionly'></span>").replaceAll($(this));
+        newNode.html(contents);
+    });
     
     // This is the old simulation button (not time based) that Jack has deprecated
     destination.find('simbtn').each(function (index) {
@@ -609,6 +833,13 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
     math.evaluate("ptable(i,characteristic) = getTableVal(ptable_new,i,characteristic)", vars);
     math.evaluate("polyIons(i,characteristic) = getTableVal(polyIons_new,i,characteristic)", vars);
     math.evaluate("noComma(x) = x", vars);
+    // Revert row and column functions to pre math.js 11.6 functionality
+    math.evaluate("row(a,b) = row_old(a,b)", vars);
+    math.evaluate("column(a,b) = column_old(a,b)", vars);
+    // Custom frac function to handle fractions
+    math.evaluate("frac(x) = isInteger(x) == true ? x : fraction(x)", vars);
+    // Custom function to add sign in front of positive numbers
+    math.evaluate("cleancf(x) = x > 0 ? (x == 1 ? '+' : concat('+',string(x))) : (x == -1 ? '-' : x)", vars);
 
     // Evaluate all the statements
     // console.log("pre",statements, vars, only_randoms);
@@ -623,7 +854,13 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
         let result = evaluatedStatements[i][1];
         let statement = evaluatedStatements[i][2];
 
+        // PLEASE NOTE: the array and matrix unwrapping may be superflous now that we are using column_old
+        // and row_old functions to revert to the old math.js behavior of returning a single number...
+        // at some point we can experiement with turning off these two bits below.
         // Sometimes math.js returns a 1 x 1 matrix and we want just the single value from that if possible
+        if (Array.isArray(result)) {
+            result = unwrapSingleItemArray(result);
+        }
         if (result instanceof math.Matrix) {
             let size = math.size(result); // returns e.g. [1,1] for a 1x1 matrix
             let sizeOfSize = math.size(size).get([0]);
@@ -634,22 +871,64 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
             }
         }
 
+        // Handle fraction rendering as 3/4 in a var field (pp-tag-v) but 0.75 in an input field
+        let render_result = result;
+        let answer_result = result;
+        if (result instanceof math.Fraction) {
+            render_result = math.format(result);
+            answer_result = result.valueOf();
+        }
+
         if (element !== null && element.hasClass("pp-tag-v")) {
             // newRoundNice follows custom_rounding rules unless statement includes more context for
             // a different number of sig figs
-            $(element).html(newRoundNice(result, statement, custom_rounding));
+            $(element).html(newRoundNice(render_result, statement, custom_rounding));
             if (statement.includes("noComma")) {
                 element.addClass("noComma");
             }
         } else if (element !== null && element.is("input")) {
             // see newRoundNice note above
-            $(element).data("answer", newRoundNice(result, statement, custom_rounding));
+            $(element).data("answer", newRoundNice(answer_result, statement, custom_rounding));
         }
     }
+
+    // ppfrq tags are FRQ (or free response question) tags that are used to render a free response questions
+    // the number of points inside the ppfrq tag is the number of points for the question
+    // and to shoehorn this into the one point per question system, we will create multiple dummy tags with name=answer
+    // even though there is only one visible multiline textarea
+    // This is a hack to make it work with the existing system
+    destination.find('ppfrq').each(function (index) {
+        $(this).find('span.pp-tag-v').contents().unwrap();
+        let contents = cleanContents($(this).html());
+        
+        // Create FRQ widget instance
+        let frqWidget = new FrqWidget(contents, get_next_answer_id);
+        
+        // Replace the original tag with the widget
+        frqWidget.getElement().replaceAll($(this));
+        
+        // Optional: Store reference to widget on the element for later access
+        frqWidget.getElement().data('frqWidget', frqWidget);
+    });
 
     var superMcSeed = vars.get("superMcSeed");
 
     destination.find('supermc').each(function (index) {
+        // This is necessary in the case of latex because it needs to be escaped before being run through mathjs evaluate function
+        $(this).find('span.pp-tag-v').contents().each(function () {
+            if (this.nodeType === Node.TEXT_NODE) {
+                const escapedText = JSON.stringify(this.textContent).slice(1, -1);
+                $(this).replaceWith(escapedText);
+            }
+        });
+        // Unwrap var (v, pp-tag-v) tags inside supermc. They should be sparingly used but are necessary for use inside LaTeX tags
+        $(this).find('span.pp-tag-v').contents().unwrap();
+
+        // Unwrap the pplatex tags as text nodes
+        $(this).find('pplatex').replaceWith(function() {
+            return document.createTextNode('"[pplatex] ' + $(this).text() + '[/pplatex]"');
+        });
+
         let contents = cleanContents($(this).html());
         let split = contents.split("\n");
         // split the splits on the first equal sign in each one and also trailing ampersands
@@ -674,8 +953,16 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
                 var result;
                 try {
                     result = math.evaluate(rightHandSide, vars);
+                    result = newRoundNice(result, rightHandSide, custom_rounding)
                 } catch (e) {
                     error = error + "Error evaluating ' " + leftHandSide + " = " + rightHandSide + " '. ";
+                }
+
+                let rendered_result = result+unitPostSort;
+                // if the result is a fraction, convert it to a string
+                if (result instanceof math.Fraction) {
+                    rendered_result = math.format(result)+unitPostSort;
+                    result = result.valueOf();
                 }
         
                 if (leftHandSide == "correct" && correctFound) {
@@ -683,18 +970,18 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
                 } else if (leftHandSide == "correct" && !correctFound) {
                     correctFound = true;
                     // store as [mathjs result, mathjs result with post sort concatenation of units]
-                    correctAnswer = [result,result+unitPostSort];
+                    correctAnswer = [result,rendered_result];
                 } else if (leftHandSide == "order") {
                     order = result;
                 } else if (leftHandSide == "total") {
                     total = result;
                 } else if (leftHandSide.startsWith("wrong")) {
-                    allWrongAnswers.push([result,result+unitPostSort]);
+                    allWrongAnswers.push([result,rendered_result]);
                 }
             }
         });
 
-        allWrongAnswers = deduplicateArray(allWrongAnswers);
+        allWrongAnswers = deduplicateArray(allWrongAnswers, correctAnswer);
 
         // Error checking before actually doing the work
         let newNode;
@@ -709,8 +996,9 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
             shuffleArray(allWrongAnswers,superMcSeed);
             let selectedAnswers = allWrongAnswers.slice(0, totalWrongAns);
             selectedAnswers.push(correctAnswer);
-            // Dedup again on the off chance that a distractor is equal to the correct answer
-            selectedAnswers = deduplicateArray(selectedAnswers);
+
+            // // Dedup again on the off chance that a distractor is equal to the correct answer
+            // selectedAnswers = deduplicateArray(selectedAnswers);
 
 
             if (order == "numerical") {
@@ -751,6 +1039,9 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
             // Grab the final concatenated string values for each one since that is what we will use
             // we were only really retaining item[0] for sorting purposes!
             selectedAnswers = selectedAnswers.map(item => item[1]);
+            // Convert [pplatex] to <pplatex> for rendering
+            // also [/pplatex] to </pplatex>
+            selectedAnswers = selectedAnswers.map(item => item.replace(/\[pplatex\]/g, "<pplatex>").replace(/\[\/pplatex\]/g, "</pplatex>"));
 
             // Logic done, now render the html!
             newNode = $("<div class='superMc'>")
@@ -765,7 +1056,8 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
                 let letter = intToCapitalLetter(i);
                 dropdownNode.append($("<option>").attr("value", letter).html(letter));
             }
-            dropdownNode.data("answer", intToCapitalLetter(selectedAnswers.indexOf(correctAnswer[1])));
+            let c = correctAnswer[1].replace(/\[pplatex\]/g, "<pplatex>").replace(/\[\/pplatex\]/g, "</pplatex>");
+            dropdownNode.data("answer", intToCapitalLetter(selectedAnswers.indexOf(c)));
 
         }
 
@@ -915,7 +1207,7 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
                     let newNode = $("<div>").replaceAll($(this));
                     newNode.addClass("refreshable");
                     // No legend
-                    let layout = { showlegend: false, margin: { t: 20, r: 40, b: 80, l: 70 }};
+                    let layout = { showlegend: false, autosize: false, width: 580, height: 375, margin: { t: 20, r: 40, b: 80, l: 70 }}; // 
                     // Handle axis titles if provided
                     if (colonsplit.length == 3) {
                         let axis_titles = colonsplit[2].split(",");
@@ -1222,9 +1514,25 @@ function renderContainer(destination, custom_math, only_randoms, custom_rounding
             newNode = $("<span class='pp-tag-v'></span>").replaceAll($(this));
             newNode.html("You can't embed from that site yet.");
         } else {
+            // Extract alt text if any if it looks like "zyx/abc/123.jpg {alttext}" or something like that
+            const regex = /^([^{}]*)(?:\{([^{}]*)\})?$/;
+            const match = contents.match(regex);
+            // declare altText (undefined)
+            let altText;
+
+            if (match) {
+                // Replace contents with the first match group
+                contents = match[1];
+                altText = match[2];
+            }
+
             // It's not a URL so we will proceed assuming it's an image hosted in our s3 bucket
             newNode = $('<div class="image-container"><img src="https://www.positivephysics.org/s3_customimages/' + contents + '"></div>').replaceAll($(this));
             newNode.parent("p").css("text-align", "center");
+            if (altText) {
+                // set alt text
+                newNode.find("img").attr("alt", altText);
+            }
             isImage = true;
             ppmedia_count++;
             if (ppmedia_count == 1) {
@@ -1464,16 +1772,15 @@ const evaluateStatements = function(statements, vars, only_randoms) {
         varsToAutoCreate.set("overlay" + i, "{anchor: [50,50], style: {}}");
     }
 
-    // Loop until done
+    // Loop through the statements up to 100 times continuing looping until a pass happens
+    // without any progress on evaluating any previously unevaluated statements
     while (continueLooping && passes < 100) {
-        // We will change this if we have success in evaluating at least one statement this loop
         continueLooping = false;
-
-        // Mostly for debugging purposes
         passes = passes + 1;
-        //console.log("eval pass "+passes+":"); // uncomment for debugging
+        // console.log("eval pass "+passes+":"); // uncomment for debugging
 
         // Try to evaluate all the statements that remain unevaluated
+        // (we will null them out after a successful evaluation)
         for (let i in statements) {
             var statement = statements[i][1];
 
@@ -1488,9 +1795,7 @@ const evaluateStatements = function(statements, vars, only_randoms) {
                 // But first we pull out the == and replace with unicode ⩵ so they don't match
                 // in the regex.
                 let splitStatementOnEquals = statement.replaceAll("==", "⩵").split(/=([^=].*)/s, 2);
-                // if (splitStatementOnEquals.length > 2) {
-                //     console.log("error: too many = signs in a single statement");
-                // } else {
+
                 var rightHandSide = null; // this will always be the part that's being evaluated
                 var leftHandSide = null; // optionally what is the left hand side if there's an = sign
                 if (splitStatementOnEquals.length == 2) {
@@ -1504,6 +1809,11 @@ const evaluateStatements = function(statements, vars, only_randoms) {
                 var isRandStatement = false;
                 if (/rand\w*? *\(/g.test(rightHandSide) || /pickRandom *\(/g.test(rightHandSide)) {
                     isRandStatement = true;
+                    // If left hand side is null or if it's not a simple string of letters and or numbers
+                    if (leftHandSide == null || !leftHandSide.match(/^[a-zA-Z_$\u00C0-\u02AF\u0370-\u03FF\u2100-\u214F0-9]+$/)) {
+                        // Need to warn teachers that using a random function without starting with variable assignment won't work and the random won't be saved on the server side
+                        teacherNotifications.push("Error: You must assign the result of any calculation using random functions to a variable. Any line containing rand(...) pickRandom(...) or similar must start with something like 'variable ='.");
+                    }
                 }
 
                 // Part of immutability code, we need to see if the left hand side already matches something in the vars map
@@ -1606,7 +1916,7 @@ const evaluateStatements = function(statements, vars, only_randoms) {
                 if (gravm) {
                     vars.set("g", gravm);
                 } else {
-                    console.log("using default for g instead of gravm");
+                    // console.log("using default for g instead of gravm");
                     vars.set("g", 9.81);
                 }
                 continueLooping = true;
@@ -1616,7 +1926,7 @@ const evaluateStatements = function(statements, vars, only_randoms) {
                 if (vvar) {
                     vars.set("vvar", vvar);
                 } else {
-                    console.log("using default for vvar instead of custom");
+                    // console.log("using default for vvar instead of custom");
                     vars.set("vvar", 1);
                 }
                 continueLooping = true;
@@ -1711,9 +2021,16 @@ const intToCapitalLetter = function(int) {
     return String.fromCharCode(65 + int);
 }
 
-const deduplicateArray = function(array) {
+const deduplicateArray = function(array, itemToDrop) {
     let retVal = [];
     let toStrings = [];
+
+    // Add itemToDrop (the correct answer) to the toStrings array so we don't include it in the deduplicated array
+    // only do it if itemToDrop is not null
+    if (itemToDrop !== null && itemToDrop !== undefined) {
+        toStrings.push(itemToDrop.toString());
+    }
+
     array.forEach(function(item){
         let str = item.toString();
         if (!toStrings.includes(str)) {
@@ -1724,6 +2041,14 @@ const deduplicateArray = function(array) {
     return retVal;
 }
 
+// Used within supermc to allow units
+// e.g.:
+// correct = 100&ft
+// wrong = 0&ft
+// wrong = x&ft
+// wrong = 2&ft
+// wrong = 0.7&ft
+// order = "numerical"
 const splitOnFirstEqualAndTrailingAmpersand = function(str) {
     let index = str.indexOf('=');
     if (index === -1) return [str]; // Return the original string in an array if '=' is not found
@@ -1736,6 +2061,16 @@ const splitOnFirstEqualAndTrailingAmpersand = function(str) {
     if (secondSplit.length > 1) {
         return [firstPart.trim(), secondSplit[0].trim(), secondSplit[1].trim()];
     }
+
+    return [firstPart.trim(), secondPart.trim()];
+}
+
+const splitOnFirstEqual = function(str) {
+    let index = str.indexOf('=');
+    if (index === -1) return [str]; // Return the original string in an array if '=' is not found
+
+    let firstPart = str.substring(0, index);
+    let secondPart = str.substring(index + 1);
 
     return [firstPart.trim(), secondPart.trim()];
 }
@@ -1780,3 +2115,17 @@ const insertAssumedMultiplicationNoFunctions = function(str) {
     // Any time there are two letters in a row in the str, insert an asterisk between them
     return str.replace(/([a-z])(?=[a-z])/gi, '$1*');
 }
+
+const unwrapSingleItemArray = function(array) {
+    if (array.length === 1) {
+        x = array[0];
+        if (Array.isArray(x)) {
+            return unwrapSingleItemArray(x);
+        } else {
+            return x;
+        }
+    } else {
+        return array;
+    }
+}
+

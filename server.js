@@ -1,7 +1,28 @@
 const WebSocket = require('ws');
 
 const env = require('dotenv').config();
+// Whatcha looking at?
 const webhookURL = env.parsed.URL
+const webhookURL_AP = env.parsed.URL_AP
+
+const mongoose = require('mongoose');
+// Connect to DB
+(function connectToDB() {
+  mongoose.connect('mongodb://192.168.1.215:32770/bot')
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('Error connecting to MongoDB:', err));
+})();
+
+async function getFeatures() {
+  const features = await db.collection('features').find().toArray();
+  const featureState = {};
+  features.forEach(f => {
+    featureState[f.name] = f.enabled;
+  });
+  return featureState;
+}
+
+
 
 const wss = new WebSocket.Server({ port: 5959 });
 
@@ -23,9 +44,7 @@ function getFormattedTimestamp() {
   return now.toLocaleString('en-US', options).replace(',', '');
 }
 
-function sendWebhook(username, unitName) {
-  //            Whatcha looking at?
-  const webhookUrl = webhookURL;
+function sendWebhook(username, unitName, endpoint=false) {
 
   const webhookBody = {
     username: username, 
@@ -40,7 +59,7 @@ function sendWebhook(username, unitName) {
     ]
   };
 
-  fetch(webhookUrl, {
+  fetch(endpoint ? webhookURL_AP : webhookURL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -60,6 +79,14 @@ function sendWebhook(username, unitName) {
 
 wss.on('connection', function connection(ws) {
   // console.log(`A user connected`);
+
+  var features = getFeatures();
+  if (!features.enabled) {
+    // not enabled, return no
+    ws.send(JSON.stringify({ type: 'close' }));
+    return;
+  } 
+
   clients.push(ws);
   
   ws.on('message', function incoming(message) {
@@ -67,45 +94,58 @@ wss.on('connection', function connection(ws) {
     
     // console.log(message)
 
-    if (message.type == 'subscribe') {
-    
-      console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[SUBSCRIBE]\x1b[0m`);
-      console.log(`  - User:        \x1b[32m${message.username}\x1b[0m (ID: \x1b[32m${message.userID}\x1b[0m)`);
-      console.log(`  - Course:      \x1b[32m${message.courseID}\x1b[0m`);
-      console.log(`  - Unit:        \x1b[32m${message.unitName}\x1b[0m (ID: \x1b[32m${message.unitID}\x1b[0m)`);
-      console.log(`  - Skill Type:  \x1b[32m${message.skillType}\x1b[0m`);
-      console.log(`  - Problem ID:  \x1b[32m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
-      console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
-      
-    } else if (message.type == 'new_problem') {
-    
-      console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[NEW PROBLEM]\x1b[0m`);
-      console.log(`  - User:        \x1b[32m${message.username}\x1b[0m (ID: \x1b[32m${message.userID}\x1b[0m)`);
-      console.log(`  - Course:      \x1b[32m${message.courseID}\x1b[0m`);
-      console.log(`  - Unit:        \x1b[32m${message.unitName}\x1b[0m (ID: \x1b[32m${message.unitID}\x1b[0m)`);
-      console.log(`  - Skill:       \x1b[32m${message.skillID}\x1b[0m (Type: \x1b[32m${message.skillType}\x1b[0m)`);
-      console.log(`  - Problem ID:  \x1b[32m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
-      console.log(`  - AnswerVals:  \x1b[32m${JSON.stringify(message.answerValues) || 'None'}\x1b[0m`);
-      console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
+    switch (message.type) {
+      case 'subscribe':
+        console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[SUBSCRIBE]\x1b[0m`);
+        console.log(`  - User:        \x1b[32m${message.username}\x1b[0m (ID: \x1b[32m${message.userID}\x1b[0m)`);
+        console.log(`  - Course:      \x1b[32m${message.courseID}\x1b[0m`);
+        console.log(`  - Unit:        \x1b[32m${message.unitName}\x1b[0m (ID: \x1b[32m${message.unitID}\x1b[0m)`);
+        console.log(`  - Skill Type:  \x1b[32m${message.skillType}\x1b[0m`);
+        console.log(`  - Problem ID:  \x1b[32m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
+        console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
+        break;
 
-      sendWebhook(message.username, message.unitName)
-      
-    } else if (message.type == 'old_problem') {
-    
-      console.log(`\n[${getFormattedTimestamp()}] : \x1b[41m[OLD PROBLEM]\x1b[0m`);
-      console.log(`  - User:        \x1b[31m${message.username}\x1b[0m (ID: \x1b[31m${message.userID}\x1b[0m)`);
-      console.log(`  - Course:      \x1b[31m${message.courseID}\x1b[0m`);
-      console.log(`  - Unit:        \x1b[31m${message.unitName}\x1b[0m (ID: \x1b[31m${message.unitID}\x1b[0m)`);
-      console.log(`  - Skill Type:  \x1b[31m${message.skillType}\x1b[0m`);
-      console.log(`  - Problem ID:  \x1b[31m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
-      console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
-      
-    } else if (message.type == 'disconnect') {
+      case 'new_problem':
+        console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[NEW PROBLEM]\x1b[0m`);
+        console.log(`  - User:        \x1b[32m${message.username}\x1b[0m (ID: \x1b[32m${message.userID}\x1b[0m)`);
+        console.log(`  - Course:      \x1b[32m${message.courseID}\x1b[0m`);
+        console.log(`  - Unit:        \x1b[32m${message.unitName}\x1b[0m (ID: \x1b[32m${message.unitID}\x1b[0m)`);
+        console.log(`  - Skill:       \x1b[32m${message.skillID}\x1b[0m (Type: \x1b[32m${message.skillType}\x1b[0m)`);
+        console.log(`  - Problem ID:  \x1b[32m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
+        console.log(`  - AnswerVals:  \x1b[32m${JSON.stringify(message.answerValues) || 'None'}\x1b[0m`);
+        console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
 
-      console.log(`\n[${getFormattedTimestamp()}] : \x1b[41m[DISCONNECT]\x1b[0m`);
-      console.log(`  - User:        \x1b[31m${message.username}\x1b[0m (ID: \x1b[31m${message.userID}\x1b[0m)`);
-      console.log(`  - Last Page:   \x1b[36m${message.page}\x1b[0m\n`);
+        sendWebhook(message.username, message.unitName, false)
+        break;
 
+      case 'old_problem':
+        console.log(`\n[${getFormattedTimestamp()}] : \x1b[41m[OLD PROBLEM]\x1b[0m`);
+        console.log(`  - User:        \x1b[31m${message.username}\x1b[0m (ID: \x1b[31m${message.userID}\x1b[0m)`);
+        console.log(`  - Course:      \x1b[31m${message.courseID}\x1b[0m`);
+        console.log(`  - Unit:        \x1b[31m${message.unitName}\x1b[0m (ID: \x1b[31m${message.unitID}\x1b[0m)`);
+        console.log(`  - Skill Type:  \x1b[31m${message.skillType}\x1b[0m`);
+        console.log(`  - Problem ID:  \x1b[31m${message.nameSpace?.problemID || 'N/A'}\x1b[0m`);
+        console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
+        break;
+
+      case 'disconnect':
+        console.log(`\n[${getFormattedTimestamp()}] : \x1b[41m[DISCONNECT]\x1b[0m`);
+        console.log(`  - User:        \x1b[31m${message.username}\x1b[0m (ID: \x1b[31m${message.userID}\x1b[0m)`);
+        console.log(`  - Last Page:   \x1b[36m${message.page}\x1b[0m\n`);
+        break;
+
+      case 'apnew':
+
+        console.log(`\n[${getFormattedTimestamp()}] : \x1b[42m[NEW AP PROBLEM]\x1b[0m`);
+        // console.log(`  - User:        \x1b[32m${message.username}\x1b[0m)`);
+        console.log(`  - Course:      \x1b[32m${message.unitName}\x1b[0m`);
+        console.log(`  - Page URL:    \x1b[36m${message.page}\x1b[0m\n`);
+
+        sendWebhook("AP User", message.unitName, true)
+        break;
+
+      default:
+        break;
     }
 
   });
