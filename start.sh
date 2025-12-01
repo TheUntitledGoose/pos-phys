@@ -1,0 +1,1 @@
+clear && node server.js | tee -a log.txt

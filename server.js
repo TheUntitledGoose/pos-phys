@@ -14,11 +14,10 @@ const mongoose = require('mongoose');
 })();
 
 async function getFeatures() {
-  const features = await db.collection('features').find().toArray();
+  const db = mongoose.connection.db;
+  const features = await db.collection('hacks').find().toArray();
   const featureState = {};
-  features.forEach(f => {
-    featureState[f.name] = f.enabled;
-  });
+  features.forEach(f => { featureState[f.name] = f.enabled; });
   return featureState;
 }
 
@@ -77,13 +76,15 @@ function sendWebhook(username, unitName, endpoint=false) {
 }
 
 
-wss.on('connection', function connection(ws) {
+wss.on('connection', async function connection(ws) {
   // console.log(`A user connected`);
 
-  var features = getFeatures();
+  var features = await getFeatures();
   if (!features.enabled) {
     // not enabled, return no
+    console.log("hacks disabled")
     ws.send(JSON.stringify({ type: 'close' }));
+    ws.close();
     return;
   } 
 
