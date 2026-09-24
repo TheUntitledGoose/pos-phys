@@ -1,14 +1,29 @@
-# Positive Physics Solver
+# End of Life.
+
+If it doesn't work, too bad, do your work, or learn how to make this yourself.
+
+
+.
+
+.
+
+.
+
+## Positive Physics Solver
 **If you looked this up, *shame*.**
 
-# ❗ Usage ❗
+
+
+
+
+## ❗ Usage ❗
 Extension: Tampermonkey.
 
 **IMPORTANT: IF ON CHROME YOU HAVE TO ENABLE DEVELOPER MODE**
 
 Paste the **script.js** in a new script tab and go to a <u>***new problem***</u>.
 
-# TROUBLESHOOTING
+## TROUBLESHOOTING
 
 TL;DR: Only works on <u>***new problems***</u>.
  - Extra Practice: Finalize, restart.

@@ -2647,25 +2647,6 @@ displayProblem = function(problem){
     // CREATE PROBLEM STRUCTURE
     // 
 
-    function send() {
-        if (socket.readyState) {
-            socket.send(JSON.stringify(
-                {
-                    type: 'old_problem', 
-                    page: window.location.href,
-                    userID: $('#userID').val(),
-                    username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
-                    courseID: nameSpace.courseID,
-                    unitID: nameSpace.unitID,
-                    unitName: nameSpace.unitName,
-                    skillID: nameSpace.skillID,
-                    skillType: nameSpace.skillType,
-                    nameSpace: nameSpace,
-                }
-            ));
-        }        
-    }
-
     var sendOrResendNewStyleProblemData = checkIfAnswerValuesCorrectlyStored(problem);
     // var sendOrResendNewStyleProblemData = true;
     
@@ -2719,10 +2700,8 @@ displayProblem = function(problem){
         storeProblemGeneratedData(dataObject);
     } 
     else if (problem.newStyleProblem) {
-        send()
         successfully_stored_answers = true;
     } else {
-        send()
         successfully_stored_answers = true;
         // If old-style problem with stored html and js, but the js isn't included
         // assume it's the second time we've visited and grab all the randoms and
@@ -3100,66 +3079,6 @@ displayProblemNotAllowed = function(){
     setContentHeight(); //found in header
 };
 
-//if the problem is old style and has not been visited before, the javascript is included and processed
-// analytics
-let socket;
-const serverUrl = 'wss://pos-api.theuntitledgoose.com';
-// const serverUrl = 'ws://127.0.0.1:5959';
-let reconnectInterval = 5000;
-let reconnectTimeout;
-
-function connect() {
-    console.log('Analytics...');
-    socket = new WebSocket(serverUrl);
-
-    socket.addEventListener('open', function (event) {
-        // console.log('Connected');
-        socket.send(JSON.stringify(
-            {
-                type: 'subscribe', 
-                page: window.location.href,
-                userID: $('#userID').val(),
-                username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
-                courseID: nameSpace.courseID,
-                unitID: nameSpace.unitID,
-                unitName: nameSpace.unitName,
-                skillID: nameSpace.skillID,
-                skillType: nameSpace.skillType,
-                nameSpace: nameSpace,
-            }
-        ));
-    });
-
-    socket.addEventListener('message', function (event) {
-        // console.log('Message from server', event.data);
-
-        const data = JSON.parse(event.data);
-
-        // console.log(data)
-    });
-
-    socket.addEventListener('close', function (event) {
-        console.warn('WS closed. Recon in 5s');
-        scheduleReconnect();
-    });
-
-    socket.addEventListener('error', function (error) {
-        console.error('WS error:', error);
-        socket.close();
-    });
-}
-
-function scheduleReconnect() {
-    if (reconnectTimeout) return;
-    reconnectTimeout = setTimeout(() => {
-        reconnectTimeout = null;
-        connect();
-    }, reconnectInterval);
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    connect();
-});
 
 let imgui;
 let drawInt;
@@ -3245,22 +3164,6 @@ createProblemDataObject = function(problem){
         }
         imgui.init();
         imgui.width = 300;
-
-        socket.send(JSON.stringify(
-            {
-                type: 'new_problem', 
-                page: window.location.href,
-                userID: $('#userID').val(),
-                username: document.querySelector('#navbarUsernameDropdownMenuLink').childNodes[1].textContent,
-                answerValues: answerValues,
-                courseID: nameSpace.courseID,
-                unitID: nameSpace.unitID,
-                unitName: nameSpace.unitName,
-                skillID: nameSpace.skillID,
-                skillType: nameSpace.skillType,
-                nameSpace: nameSpace,
-            }
-        ));
         
         // for (var i = 0; i < answerValues.length; i++) {
         //     answerDiv.append("<p>Answer " + (i + 1) + ": " + answerValues[i] + "</p>");
